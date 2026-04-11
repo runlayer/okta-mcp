@@ -12,6 +12,7 @@ from mcp.server.fastmcp import Context
 
 from okta_mcp_server.server import mcp
 from okta_mcp_server.utils.client import get_okta_client
+from okta_mcp_server.utils.serialization import serialize_okta_object
 
 
 @mcp.tool()
@@ -81,7 +82,7 @@ async def list_applications(
             return []
 
         logger.info(f"Successfully retrieved {len(apps)} applications")
-        return [app for app in apps]
+        return serialize_okta_object(apps)
     except Exception as e:
         logger.error(f"Exception while listing applications: {type(e).__name__}: {e}")
         return [f"Exception: {e}"]
@@ -117,7 +118,7 @@ async def get_application(ctx: Context, app_id: str, expand: Optional[str] = Non
             return {"error": str(err)}
 
         logger.info(f"Successfully retrieved application: {app_id}")
-        return app
+        return serialize_okta_object(app)
     except Exception as e:
         logger.error(f"Exception while getting application {app_id}: {type(e).__name__}: {e}")
         return {"error": str(e)}
@@ -152,7 +153,7 @@ async def create_application(ctx: Context, app_config: Dict[str, Any], activate:
             return {"error": str(err)}
 
         logger.info(f"Successfully created application")
-        return app
+        return serialize_okta_object(app)
     except Exception as e:
         logger.error(f"Exception while creating application: {type(e).__name__}: {e}")
         return {"error": str(e)}
@@ -184,7 +185,7 @@ async def update_application(ctx: Context, app_id: str, app_config: Dict[str, An
             return {"error": str(err)}
 
         logger.info(f"Successfully updated application: {app_id}")
-        return app
+        return serialize_okta_object(app)
     except Exception as e:
         logger.error(f"Exception while updating application {app_id}: {type(e).__name__}: {e}")
         return {"error": str(e)}
