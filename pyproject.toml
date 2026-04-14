@@ -13,6 +13,11 @@ dependencies = [
     "keyring>=25.6.0"
 ]
 
+[tool.uv]
+# flatdict 4.0.1 (pinned by okta SDK) fails to build on Python 3.13
+# because its setup.py uses pkg_resources. 4.1.0 fixes this.
+override-dependencies = ["flatdict>=4.1.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

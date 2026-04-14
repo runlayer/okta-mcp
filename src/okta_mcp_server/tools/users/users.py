@@ -13,6 +13,7 @@ from mcp.server.fastmcp import Context
 from okta_mcp_server.server import mcp
 from okta_mcp_server.utils.client import get_okta_client
 from okta_mcp_server.utils.pagination import build_query_params, create_paginated_response, paginate_all_results
+from okta_mcp_server.utils.serialization import serialize_okta_object
 
 
 @mcp.tool()
@@ -90,13 +91,13 @@ async def list_users(
             logger.info("No users found")
             return create_paginated_response([], response, fetch_all_used=fetch_all)
 
-        # Convert users to the expected format
-        user_items = [(user.profile, user.id) for user in users]
+        # Convert users to JSON-serializable dicts
+        user_items = serialize_okta_object(users)
 
         if fetch_all and response and hasattr(response, "has_next") and response.has_next():
             logger.info(f"fetch_all=True, auto-paginating from initial {len(users)} users")
             all_users, pagination_info = await paginate_all_results(response, users)
-            all_user_items = [(user.profile, user.id) for user in all_users]
+            all_user_items = serialize_okta_object(all_users)
 
             logger.info(
                 f"Successfully retrieved {len(all_user_items)} users across {pagination_info['pages_fetched']} pages"
@@ -173,7 +174,7 @@ async def get_user(user_id: str, ctx: Context = None) -> list:
         user = await client.get_user(user_id)
 
         logger.info(f"Successfully retrieved user: {user.profile.email if hasattr(user, 'profile') else user_id}")
-        return [user]
+        return [serialize_okta_object(user)]
     except Exception as e:
         logger.error(f"Exception while getting user {user_id}: {type(e).__name__}: {e}")
         return [f"Exception: {e}"]
@@ -211,7 +212,7 @@ async def create_user(profile: dict, ctx: Context = None) -> list:
         logger.info(
             f"Successfully created user: {user.id} ({user.profile.email if hasattr(user, 'profile') else 'N/A'})"
         )
-        return [user]
+        return [serialize_okta_object(user)]
     except Exception as e:
         logger.error(f"Exception while creating user: {type(e).__name__}: {e}")
         return [f"Exception: {e}"]
@@ -246,7 +247,7 @@ async def update_user(user_id: str, profile: dict, ctx: Context = None) -> list:
             return [f"Error: {err}"]
 
         logger.info(f"Successfully updated user: {user_id}")
-        return [user]
+        return [serialize_okta_object(user)]
     except Exception as e:
         logger.error(f"Exception while updating user {user_id}: {type(e).__name__}: {e}")
         return [f"Exception: {e}"]
